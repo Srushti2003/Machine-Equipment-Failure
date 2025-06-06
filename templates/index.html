@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Equipment Failure Prediction</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Equipment Failure Prediction</h2>
+        <form id="predictForm">
+            <input type="number" step="any" name="temperature" placeholder="Temperature" required><br>
+            <input type="number" step="any" name="pressure" placeholder="Pressure" required><br>
+            <input type="number" step="any" name="vibration" placeholder="Vibration" required><br>
+            <input type="number" step="any" name="humidity" placeholder="Humidity" required><br>
+
+            <label>Equipment:</label>
+            <select name="equipment">
+                {% for equip in equipments %}
+                    <option value="{{ equip }}">{{ equip }}</option>
+                {% endfor %}
+            </select><br>
+
+            <label>Location:</label>
+            <select name="location">
+                {% for loc in locations %}
+                    <option value="{{ loc }}">{{ loc }}</option>
+                {% endfor %}
+            </select><br>
+
+            <button type="submit">Predict</button>
+        </form>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        document.getElementById("predictForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+            const data = {};
+            formData.forEach((value, key) => { data[key] = value });
+
+            fetch("/predict", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    temperature: parseFloat(data.temperature),
+                    pressure: parseFloat(data.pressure),
+                    vibration: parseFloat(data.vibration),
+                    humidity: parseFloat(data.humidity),
+                    equipment: data.equipment,
+                    location: data.location
+                })
+            })
+            .then(response => response.json())
+            .then(result => {
+                document.getElementById("result").innerText =
+                    result.faulty === 1 ? "⚠️ Equipment is likely to FAIL!" : "✅ Equipment is Healthy.";
+            })
+            .catch(error => {
+                document.getElementById("result").innerText = "Error occurred.";
+                console.error("Error:", error);
+            });
+        });
+    </script>
+</body>
+</html>
